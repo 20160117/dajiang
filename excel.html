@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="../../报表/2017年/7月数据报表/js/jquery.js"></script>
+    <script src="../../报表/2017年/7月数据报表/js/xlsx.core.min.js"></script>
+
+</head>
+<body>
+<input type="file" id="excel-file_list" name="upload"   style="width: 400px;height: 300px;font-size: 50px;">
+<input type="hidden" id="hiddata1" value="" />
+<input type="hidden" id="hiddata2" value="">
+<input type="hidden" id="hiddata3" value="">
+<input type="hidden" id="hiddata4" value="">
+<input type="hidden" id="hiddata5" value="">
+</body>
+</html>
+<script>
+    $(function () {
+
+        $('#excel-file_list').change(function(e) {
+            var files = e.target.files;
+
+            var fileReader = new FileReader();
+            fileReader.onload = function(ev) {
+                try {
+                    var data = ev.target.result,
+                        workbook = XLSX.read(data, {
+                            type: 'binary'
+                        }), // 以二进制流方式读取得到整份excel表格对象
+                        persons = []; // 存储获取到的数据
+                } catch (e) {
+                    alert('文件类型不正确');
+                    return;
+                }
+
+                // 表格的表格范围，可用于判断表头是否数量是否正确
+                var fromTo = '';
+                // 遍历每张表读取
+
+                for (var sheet in workbook.Sheets) {
+                    if (workbook.Sheets.hasOwnProperty(sheet)) {
+                        fromTo = workbook.Sheets[sheet]['!ref'];
+                        persons1 = persons.concat(XLSX.utils.sheet_to_json(workbook.Sheets.历史成交));
+                        persons2 = persons.concat(XLSX.utils.sheet_to_json(workbook.Sheets.本月成交));
+                        persons3 = persons.concat(XLSX.utils.sheet_to_json(workbook.Sheets.分渠道成交));
+                        persons4 = persons.concat(XLSX.utils.sheet_to_json(workbook.Sheets.日均AU));
+                        persons5 = persons.concat(XLSX.utils.sheet_to_json(workbook.Sheets.来电统计));
+                        persons7 = persons.concat(XLSX.utils.sheet_to_json(workbook.Sheets.成交成本));
+                        //发现json格式不是你想要的你可以
+                        //XLSX.utils.sheet_to_json(workbook.Sheets[sheet],{raw:true, header:1})
+                        // 如果只取第一张表，就取消注释这行
+                        $("#hiddata1").val(JSON.stringify(persons1));
+                        $("#hiddata2").val(JSON.stringify(persons2));
+                        $("#hiddata3").val(JSON.stringify(persons3));
+                        $("#hiddata4").val(JSON.stringify(persons4));
+                        $("#hiddata5").val(JSON.stringify(persons5));
+                        $("#hiddata7").val(JSON.stringify(persons7));
+                        localStorage.setItem("json_data1",JSON.stringify(persons1));
+                        localStorage.setItem("json_data2",JSON.stringify(persons2));
+                        localStorage.setItem("json_data3",JSON.stringify(persons3));
+                        localStorage.setItem("json_data4",JSON.stringify(persons4));
+                        localStorage.setItem("json_data5",JSON.stringify(persons5));
+                        localStorage.setItem("json_data_last",JSON.stringify(persons7));
+                        var categories_time=time_removeRepeat(persons1);//获取时间轴
+                        localStorage.setItem("categories_time",JSON.stringify(categories_time));
+                        break; // 如果只取第一张表，就取消注释这行
+                    }
+                }
+
+
+            };
+
+            // 以二进制方式打开文件
+            fileReader.readAsBinaryString(files[0]);
+
+            //index.html
+            var json_data1 = JSON.parse(localStorage.getItem("json_data1"));//获取本地存储excel转json数据
+            var json_data2 = JSON.parse(localStorage.getItem("json_data2"));//获取本地存储excel转json数据
+            var json_data3 = JSON.parse(localStorage.getItem("json_data3"));//获取本地存储excel转json数据
+            index_data(json_data1);
+            index_data_2(json_data2);
+            index_data_3(json_data3);
+
+            //console.log(json_data3);
+
+            //bargain.html
+            var json_data4 = JSON.parse(localStorage.getItem("json_data4"));//获取本地存储excel转json数据
+            bargain_data(json_data4);
+
+            //telegram.html
+            var json_data5 = JSON.parse(localStorage.getItem("json_data5"));//获取本地存储excel转json数据
+            telegram_data(json_data5);
+
+            //prime.html
+            var json_data_last = JSON.parse(localStorage.getItem("json_data_last"));//获取本地存储excel转json数据
+            prime_data(json_data_last);
+
+
+        })
+    });
+    //chengjiao ---index.html（底部三个图表都是分渠道成交）
+    //data     ----bargain.html(官网详情) .prime.html(分渠道成交)
+    //data
+
+
+
+    function  index_data(json_data1) {
+        var gwcbarr=[],gwyjarr=[],dkcbarr=[],dkyjarr=[];
+        for(var i = 0 ; i< json_data1.length/13; i++){
+            var t =json_data1;
+            gwcbarr.push([
+                Number(t[i*13].官网成本),
+                Number(t[i*13+1].官网成本),
+                Number(t[i*13+2].官网成本),
+                Number(t[i*13+3].官网成本),
+                Number(t[i*13+4].官网成本),
+                Number(t[i*13+5].官网成本),
+                Number(t[i*13+6].官网成本),
+                Number(t[i*13+7].官网成本),
+                Number(t[i*13+8].官网成本),
+                Number(t[i*13+9].官网成本),
+                Number(t[i*13+10].官网成本),
+                Number(t[i*13+11].官网成本),
+                Number(t[i*13+12].官网成本)
+            ]);
+            gwyjarr.push([
+                Number(t[i*13].官网业绩),
+                Number(t[i*13+1].官网业绩),
+                Number(t[i*13+2].官网业绩),
+                Number(t[i*13+3].官网业绩),
+                Number(t[i*13+4].官网业绩),
+                Number(t[i*13+5].官网业绩),
+                Number(t[i*13+6].官网业绩),
+                Number(t[i*13+7].官网业绩),
+                Number(t[i*13+8].官网业绩),
+                Number(t[i*13+9].官网业绩),
+                Number(t[i*13+10].官网业绩),
+                Number(t[i*13+11].官网业绩),
+                Number(t[i*13+12].官网业绩)
+            ]);
+            dkcbarr.push([
+                Number(t[i*13].端口成本),
+                Number(t[i*13+1].端口成本),
+                Number(t[i*13+2].端口成本),
+                Number(t[i*13+3].端口成本),
+                Number(t[i*13+4].端口成本),
+                Number(t[i*13+5].端口成本),
+                Number(t[i*13+6].端口成本),
+                Number(t[i*13+7].端口成本),
+                Number(t[i*13+8].端口成本),
+                Number(t[i*13+9].端口成本),
+                Number(t[i*13+10].端口成本),
+                Number(t[i*13+11].端口成本),
+                Number(t[i*13+12].端口成本)
+            ]);
+            dkyjarr.push([
+                Number(t[i*13].端口业绩),
+                Number(t[i*13+1].端口业绩),
+                Number(t[i*13+2].端口业绩),
+                Number(t[i*13+3].端口业绩),
+                Number(t[i*13+4].端口业绩),
+                Number(t[i*13+5].端口业绩),
+                Number(t[i*13+6].端口业绩),
+                Number(t[i*13+7].端口业绩),
+                Number(t[i*13+8].端口业绩),
+                Number(t[i*13+9].端口业绩),
+                Number(t[i*13+10].端口业绩),
+                Number(t[i*13+11].端口业绩),
+                Number(t[i*13+12].端口业绩)
+            ]);
+
+
+        }
+        /*localStorage.setItem("gwcbarr",JSON.stringify(gwcbarr));
+        localStorage.setItem("gwyjarr",JSON.stringify(gwyjarr));
+        localStorage.setItem("dkyjarr",JSON.stringify(dkyjarr));
+        localStorage.setItem("dkcbarr",JSON.stringify(dkcbarr));*/
+
+    }
+
+    function index_data_2(json_data2) {
+        var wlyxsjarr=[];
+        for(var i = 0 ; i< json_data2.length; i++) {
+            var v = json_data2;
+            wlyxsjarr.push(
+                    {
+                        "total":Number(v[i].总投入),
+                        "achievement": Number(v[i].业绩),
+                        "officalROI": Number(v[i].官网ROI),
+                        "portROI": Number(v[i].端口ROI),
+                        "officalVolume": Number(v[i].官网成交量),
+                        "portVolume": Number(v[i].端口成交量)
+                    }
+
+            );
+        }
+        /*localStorage.setItem("wlyxsjarr",JSON.stringify(wlyxsjarr));*/
+    }
+
+    function index_data_3(json_data3) {
+
+        var categories_city= ['北京', '成都', '东莞', '广州', '南京', '上海', '深圳', '天津', '重庆','惠州'];
+        var series_name = ['365', '58同城', '安居客', '赶集', '乐居', '搜房', '新浪乐居', '中原官网'];
+
+        var darr=[
+            {
+                '北京':0, '成都':0, '东莞':0, '广州':0, '南京':0, '上海':0, '深圳':0, '天津':0, '重庆':0,'惠州':0
+            },{
+                '北京':0, '成都':0, '东莞':0, '广州':0, '南京':0, '上海':0, '深圳':0, '天津':0, '重庆':0,'惠州':0
+            },{
+                '北京':0, '成都':0, '东莞':0, '广州':0, '南京':0, '上海':0, '深圳':0, '天津':0, '重庆':0,'惠州':0
+            },{
+                '北京':0, '成都':0, '东莞':0, '广州':0, '南京':0, '上海':0, '深圳':0, '天津':0, '重庆':0,'惠州':0
+            },{
+                '北京':0, '成都':0, '东莞':0, '广州':0, '南京':0, '上海':0, '深圳':0, '天津':0, '重庆':0,'惠州':0
+            },{
+                '北京':0, '成都':0, '东莞':0, '广州':0, '南京':0, '上海':0, '深圳':0, '天津':0, '重庆':0,'惠州':0
+            },{
+                '北京':0, '成都':0, '东莞':0, '广州':0, '南京':0, '上海':0, '深圳':0, '天津':0, '重庆':0,'惠州':0
+            },{
+                '北京':0, '成都':0, '东莞':0, '广州':0, '南京':0, '上海':0, '深圳':0, '天津':0, '重庆':0,'惠州':0
+            }
+        ];
+        Array.prototype.unique3 = function(){
+            var res = [];
+            var json = {};
+            for(var i = 0; i < this.length; i++){
+                if(!json[this[i]]){
+                    res.push(this[i]);
+                    json[this[i]] = 1;
+                }
+            }
+            return res;
+        };
+        //官网&端口成交数据 (万元)
+        for(var k = 0 ; k< json_data3.length; k++) {
+            for(var m = 0 ; m< series_name.length; m++) {
+                //找到58同城所有数据
+                if (json_data3[k].来源渠道 == '365') {
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[k].城市) {
+                            darr[0][json_data3[k].城市] = json_data3[k].业绩;
+                        }
+                    }
+                }else if(json_data3[k].来源渠道 == '58同城'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[k].城市) {
+                            darr[1][json_data3[k].城市] = json_data3[k].业绩;
+                        }
+                    }
+                }else if(json_data3[k].来源渠道 == '安居客'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[k].城市) {
+                            darr[2][json_data3[k].城市] = json_data3[k].业绩;
+                        }
+                    }
+                }else if(json_data3[k].来源渠道 == '赶集'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[k].城市) {
+                            darr[3][json_data3[k].城市] = json_data3[k].业绩;
+                        }
+                    }
+                }else if(json_data3[k].来源渠道 == '乐居'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[k].城市) {
+                            darr[4][json_data3[k].城市] = json_data3[k].业绩;
+                        }
+                    }
+                }else if(json_data3[k].来源渠道 == '搜房'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[k].城市) {
+                            darr[5][json_data3[k].城市] = json_data3[k].业绩;
+                        }
+                    }
+                }else if(json_data3[k].来源渠道 == '新浪乐居'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[k].城市) {
+                            darr[6][json_data3[k].城市] = json_data3[k].业绩;
+                        }
+                    }
+                }else if(json_data3[k].来源渠道 == '中原官网'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[k].城市) {
+                            darr[7][json_data3[k].城市] = json_data3[k].业绩;
+                        }
+                    }
+                }
+                var new_darr =[];
+                //console.log(darr);
+                $.each(darr,function(i,data){
+                    var json=[];
+                    for(var i in data){
+                        json.push(data[i]);
+                    }
+                    new_darr.push(json);
+                });
+                var new_darr_last=[];
+                for(e=0;e<new_darr.length;e++){
+                    new_darr[e].unique3();
+                    /*console.log(new_darr[e]);*/
+                }
+
+            }
+        }
+
+        //官网&端口使用人数
+        for(var t = 0 ; t< json_data3.length; t++) {
+            for(var y = 0 ; y< series_name.length; y++) {
+                //找到58同城所有数据
+                if (json_data3[t].来源渠道 == '365') {
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[t].城市) {
+                            darr[0][json_data3[t].城市] = json_data3[t].使用人数;
+                        }
+                    }
+                }else if(json_data3[t].来源渠道 == '58同城'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[t].城市) {
+                            darr[1][json_data3[t].城市] = json_data3[t].使用人数;
+                        }
+                    }
+                }else if(json_data3[t].来源渠道 == '安居客'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[t].城市) {
+                            darr[2][json_data3[t].城市] = json_data3[t].使用人数;
+                        }
+                    }
+                }else if(json_data3[t].来源渠道 == '赶集'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[t].城市) {
+                            darr[3][json_data3[t].城市] = json_data3[t].使用人数;
+                        }
+                    }
+                }else if(json_data3[t].来源渠道 == '乐居'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[t].城市) {
+                            darr[4][json_data3[t].城市] = json_data3[t].使用人数;
+                        }
+                    }
+                }else if(json_data3[t].来源渠道 == '搜房'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[t].城市) {
+                            darr[5][json_data3[t].城市] = json_data3[t].使用人数;
+                        }
+                    }
+                }else if(json_data3[t].来源渠道 == '新浪乐居'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[t].城市) {
+                            darr[6][json_data3[t].城市] = json_data3[t].使用人数;
+                        }
+                    }
+                }else if(json_data3[t].来源渠道 == '中原官网'){
+                    for (var i = 0; i < categories_city.length; i++) {
+                        if (categories_city[i] == json_data3[t].城市) {
+                            darr[7][json_data3[t].城市] = json_data3[t].使用人数;
+                        }
+                    }
+                }
+                var new_darrT =[];
+                //console.log(darr);
+                $.each(darr,function(i,data){
+                    var json=[];
+                    for(var i in data){
+                        json.push(data[i]);
+                    }
+                    new_darrT.push(json);
+                });
+                var new_darr_lastT=[];
+                for(e=0;e<new_darrT.length;e++){
+                    new_darrT[e].unique3();
+                    console.log(new_darrT[e]);
+                }
+
+            }
+        }
+
+       /* var mr_deal_series=[];
+        for(var i = 0 ; i< json_data3.length/13; i++) {
+            var v = json_data3;
+            mr_deal_series.push([
+                [v[i*13].来源渠道, v[i*13].使用人数],
+                [v[i*13+1].来源渠道,v[i*13+1].使用人数],
+                [v[i*13+2].来源渠道,v[i*13+2].使用人数],
+                [v[i*13+3].来源渠道,v[i*13+3].使用人数],
+                [v[i*13+4].来源渠道,v[i*13+4].使用人数],
+                [v[i*13+5].来源渠道,v[i*13+5].使用人数],
+                [v[i*13+6].来源渠道,v[i*13+6].使用人数],
+                [v[i*13+7].来源渠道,v[i*13+7].使用人数],
+                [v[i*13+8].来源渠道,v[i*13+8].使用人数],
+                [v[i*13+9].来源渠道,v[i*13+9].使用人数],
+                [v[i*13+10].来源渠道,v[i*13+10].使用人数],
+                [v[i*13+11].来源渠道,v[i*13+11].使用人数],
+                [v[i*13+12].来源渠道,v[i*13+12].使用人数]
+                ]
+            );
+        }
+
+        console.log(mr_deal_series);*/
+        /*localStorage.setItem("wlyxsjarr",JSON.stringify(wlyxsjarr));*/
+    }
+
+    function bargain_data(json_data4) {
+        var rijunAU1=[],fyxqarr=[],tclarr=[],erciarr=[],xcyzbarr=[],pjfwscarr=[],pjllymarr=[];
+        for(var i = 0 ; i< json_data4.length/13; i++){
+            var r =json_data4;
+            rijunAU1.push([
+                r[i*13].日均UV,
+                r[i*13+1].日均UV,
+                r[i*13+2].日均UV,
+                r[i*13+3].日均UV,
+                r[i*13+4].日均UV,
+                r[i*13+5].日均UV,
+                r[i*13+6].日均UV,
+                r[i*13+7].日均UV,
+                r[i*13+8].日均UV,
+                r[i*13+9].日均UV,
+                r[i*13+10].日均UV,
+                r[i*13+11].日均UV,
+                r[i*13+12].日均UV
+            ]);
+            fyxqarr.push([
+                r[i*13].房源详情页UV转化率,
+                r[i*13+1].房源详情页UV转化率,
+                r[i*13+2].房源详情页UV转化率,
+                r[i*13+3].房源详情页UV转化率,
+                r[i*13+4].房源详情页UV转化率,
+                r[i*13+5].房源详情页UV转化率,
+                r[i*13+6].房源详情页UV转化率,
+                r[i*13+7].房源详情页UV转化率,
+                r[i*13+8].房源详情页UV转化率,
+                r[i*13+9].房源详情页UV转化率,
+                r[i*13+10].房源详情页UV转化率,
+                r[i*13+11].房源详情页UV转化率,
+                r[i*13+12].房源详情页UV转化率
+            ]);
+            tclarr.push([
+                r[i*13].跳出率,
+                r[i*13+1].跳出率,
+                r[i*13+2].跳出率,
+                r[i*13+3].跳出率,
+                r[i*13+4].跳出率,
+                r[i*13+5].跳出率,
+                r[i*13+6].跳出率,
+                r[i*13+7].跳出率,
+                r[i*13+8].跳出率,
+                r[i*13+9].跳出率,
+                r[i*13+10].跳出率,
+                r[i*13+11].跳出率,
+                r[i*13+12].跳出率
+            ]);
+            erciarr.push([
+                r[i*13].二次或以上访问用户占比,
+                r[i*13+1].二次或以上访问用户占比,
+                r[i*13+2].二次或以上访问用户占比,
+                r[i*13+3].二次或以上访问用户占比,
+                r[i*13+4].二次或以上访问用户占比,
+                r[i*13+5].二次或以上访问用户占比,
+                r[i*13+6].二次或以上访问用户占比,
+                r[i*13+7].二次或以上访问用户占比,
+                r[i*13+8].二次或以上访问用户占比,
+                r[i*13+9].二次或以上访问用户占比,
+                r[i*13+10].二次或以上访问用户占比,
+                r[i*13+11].二次或以上访问用户占比,
+                r[i*13+12].二次或以上访问用户占比
+            ]);
+            xcyzbarr.push([
+                r[i*13].新用户占比,
+                r[i*13+1].新用户占比,
+                r[i*13+2].新用户占比,
+                r[i*13+3].新用户占比,
+                r[i*13+4].新用户占比,
+                r[i*13+5].新用户占比,
+                r[i*13+6].新用户占比,
+                r[i*13+7].新用户占比,
+                r[i*13+8].新用户占比,
+                r[i*13+9].新用户占比,
+                r[i*13+10].新用户占比,
+                r[i*13+11].新用户占比,
+                r[i*13+12].新用户占比
+            ]);
+            pjfwscarr.push([
+                r[i*13].平均访问时长,
+                r[i*13+1].平均访问时长,
+                r[i*13+2].平均访问时长,
+                r[i*13+3].平均访问时长,
+                r[i*13+4].平均访问时长,
+                r[i*13+5].平均访问时长,
+                r[i*13+6].平均访问时长,
+                r[i*13+7].平均访问时长,
+                r[i*13+8].平均访问时长,
+                r[i*13+9].平均访问时长,
+                r[i*13+10].平均访问时长,
+                r[i*13+11].平均访问时长,
+                r[i*13+12].平均访问时长
+            ]);
+            pjllymarr.push([
+                r[i*13].用户平均浏览页面,
+                r[i*13+1].用户平均浏览页面,
+                r[i*13+2].用户平均浏览页面,
+                r[i*13+3].用户平均浏览页面,
+                r[i*13+4].用户平均浏览页面,
+                r[i*13+5].用户平均浏览页面,
+                r[i*13+6].用户平均浏览页面,
+                r[i*13+7].用户平均浏览页面,
+                r[i*13+8].用户平均浏览页面,
+                r[i*13+9].用户平均浏览页面,
+                r[i*13+10].用户平均浏览页面,
+                r[i*13+11].用户平均浏览页面,
+                r[i*13+12].用户平均浏览页面
+            ]);
+
+        }
+        /*kill_undefined_bargain(rijunAU1);
+        localStorage.setItem("rijunAU1",JSON.stringify(rijunAU1));
+        kill_undefined_bargain(fyxqarr);
+        localStorage.setItem("fyxqarr",JSON.stringify(fyxqarr));
+
+        kill_undefined_bargain(tclarr);
+        localStorage.setItem("tclarr",JSON.stringify(tclarr));
+        kill_undefined_bargain(erciarr);
+        localStorage.setItem("erciarr",JSON.stringify(erciarr));
+        kill_undefined_bargain(xcyzbarr);
+        localStorage.setItem("xcyzbarr",JSON.stringify(xcyzbarr));
+
+        kill_undefined_bargain(pjfwscarr);
+        localStorage.setItem("pjfwscarr",JSON.stringify(pjfwscarr));
+
+        kill_undefined_bargain(pjllymarr);
+        localStorage.setItem("pjllymarr",JSON.stringify(pjllymarr));*/
+
+    }
+
+    function telegram_data(json_data5) {
+        var gwyxhksarr=[],wyldzb=[],
+            gwzxzbsl=[],
+            gwjtl=[],dkjtl=[],
+            gwwyldzb=[],dkwyldzb=[],gwdyzb=[],dkdyzb=[],
+            dhcbarr=[];
+        for(var i = 0 ; i< json_data5.length/13; i++){
+            var r =json_data5;
+            gwyxhksarr.push([
+                r[i*13].官网有效获客数,
+                r[i*13+1].官网有效获客数,
+                r[i*13+2].官网有效获客数,
+                r[i*13+3].官网有效获客数,
+                r[i*13+4].官网有效获客数,
+                r[i*13+5].官网有效获客数,
+                r[i*13+6].官网有效获客数,
+                r[i*13+7].官网有效获客数,
+                r[i*13+8].官网有效获客数,
+                r[i*13+9].官网有效获客数,
+                r[i*13+10].官网有效获客数,
+                r[i*13+11].官网有效获客数,
+                r[i*13+12].官网有效获客数
+            ]);
+            wyldzb.push([
+                r[i*13].唯一来电占比,
+                r[i*13+1].唯一来电占比,
+                r[i*13+2].唯一来电占比,
+                r[i*13+3].唯一来电占比,
+                r[i*13+4].唯一来电占比,
+                r[i*13+5].唯一来电占比,
+                r[i*13+6].唯一来电占比,
+                r[i*13+7].唯一来电占比,
+                r[i*13+8].唯一来电占比,
+                r[i*13+9].唯一来电占比,
+                r[i*13+10].唯一来电占比,
+                r[i*13+11].唯一来电占比,
+                r[i*13+12].唯一来电占比
+            ]);
+
+            gwzxzbsl.push([
+                r[i*13].官网在线直聊数量,
+                r[i*13+1].官网在线直聊数量,
+                r[i*13+2].官网在线直聊数量,
+                r[i*13+3].官网在线直聊数量,
+                r[i*13+4].官网在线直聊数量,
+                r[i*13+5].官网在线直聊数量,
+                r[i*13+6].官网在线直聊数量,
+                r[i*13+7].官网在线直聊数量,
+                r[i*13+8].官网在线直聊数量,
+                r[i*13+9].官网在线直聊数量,
+                r[i*13+10].官网在线直聊数量,
+                r[i*13+11].官网在线直聊数量,
+                r[i*13+12].官网在线直聊数量
+            ]);
+
+            gwjtl.push([
+                r[i*13].官网接听率,
+                r[i*13+1].官网接听率,
+                r[i*13+2].官网接听率,
+                r[i*13+3].官网接听率,
+                r[i*13+4].官网接听率,
+                r[i*13+5].官网接听率,
+                r[i*13+6].官网接听率,
+                r[i*13+7].官网接听率,
+                r[i*13+8].官网接听率,
+                r[i*13+9].官网接听率,
+                r[i*13+10].官网接听率,
+                r[i*13+11].官网接听率,
+                r[i*13+12].官网接听率
+            ]);
+            dkjtl.push([
+                r[i*13].端口接听率,
+                r[i*13+1].端口接听率,
+                r[i*13+2].端口接听率,
+                r[i*13+3].端口接听率,
+                r[i*13+4].端口接听率,
+                r[i*13+5].端口接听率,
+                r[i*13+6].端口接听率,
+                r[i*13+7].端口接听率,
+                r[i*13+8].端口接听率,
+                r[i*13+9].端口接听率,
+                r[i*13+10].端口接听率,
+                r[i*13+11].端口接听率,
+                r[i*13+12].端口接听率
+            ]);
+
+            gwwyldzb.push([
+                r[i*13].官网唯一来电占比,
+                r[i*13+1].官网唯一来电占比,
+                r[i*13+2].官网唯一来电占比,
+                r[i*13+3].官网唯一来电占比,
+                r[i*13+4].官网唯一来电占比,
+                r[i*13+5].官网唯一来电占比,
+                r[i*13+6].官网唯一来电占比,
+                r[i*13+7].官网唯一来电占比,
+                r[i*13+8].官网唯一来电占比,
+                r[i*13+9].官网唯一来电占比,
+                r[i*13+10].官网唯一来电占比,
+                r[i*13+11].官网唯一来电占比,
+                r[i*13+12].官网唯一来电占比
+            ]);
+            dkwyldzb.push([
+                r[i*13].端口唯一来电占比,
+                r[i*13+1].端口唯一来电占比,
+                r[i*13+2].端口唯一来电占比,
+                r[i*13+3].端口唯一来电占比,
+                r[i*13+4].端口唯一来电占比,
+                r[i*13+5].端口唯一来电占比,
+                r[i*13+6].端口唯一来电占比,
+                r[i*13+7].端口唯一来电占比,
+                r[i*13+8].端口唯一来电占比,
+                r[i*13+9].端口唯一来电占比,
+                r[i*13+10].端口唯一来电占比,
+                r[i*13+11].端口唯一来电占比,
+                r[i*13+12].端口唯一来电占比
+            ]);
+            gwdyzb.push([
+                r[i*13].官网大于60秒占比,
+                r[i*13+1].官网大于60秒占比,
+                r[i*13+2].官网大于60秒占比,
+                r[i*13+3].官网大于60秒占比,
+                r[i*13+4].官网大于60秒占比,
+                r[i*13+5].官网大于60秒占比,
+                r[i*13+6].官网大于60秒占比,
+                r[i*13+7].官网大于60秒占比,
+                r[i*13+8].官网大于60秒占比,
+                r[i*13+9].官网大于60秒占比,
+                r[i*13+10].官网大于60秒占比,
+                r[i*13+11].官网大于60秒占比,
+                r[i*13+12].官网大于60秒占比
+            ]);
+            dkdyzb.push([
+                r[i*13].端口大于60秒占比,
+                r[i*13+1].端口大于60秒占比,
+                r[i*13+2].端口大于60秒占比,
+                r[i*13+3].端口大于60秒占比,
+                r[i*13+4].端口大于60秒占比,
+                r[i*13+5].端口大于60秒占比,
+                r[i*13+6].端口大于60秒占比,
+                r[i*13+7].端口大于60秒占比,
+                r[i*13+8].端口大于60秒占比,
+                r[i*13+9].端口大于60秒占比,
+                r[i*13+10].端口大于60秒占比,
+                r[i*13+11].端口大于60秒占比,
+                r[i*13+12].端口大于60秒占比
+            ]);
+
+            dhcbarr.push([
+                r[i*13].电话成本,
+                r[i*13+1].电话成本,
+                r[i*13+2].电话成本,
+                r[i*13+3].电话成本,
+                r[i*13+4].电话成本,
+                r[i*13+5].电话成本,
+                r[i*13+6].电话成本,
+                r[i*13+7].电话成本,
+                r[i*13+8].电话成本,
+                r[i*13+9].电话成本,
+                r[i*13+10].电话成本,
+                r[i*13+11].电话成本,
+                r[i*13+12].电话成本
+            ]);
+
+        }
+       /* kill_undefined_bargain(gwyxhksarr);
+        localStorage.setItem("gwyxhksarr",JSON.stringify(gwyxhksarr));
+        kill_undefined_bargain(wyldzb);
+        localStorage.setItem("wyldzb",JSON.stringify(wyldzb));
+
+        kill_undefined_bargain(gwzxzbsl);
+        localStorage.setItem("gwzxzbsl",JSON.stringify(gwzxzbsl));
+
+        kill_undefined_bargain(gwjtl);
+        localStorage.setItem("gwjtl",JSON.stringify(gwjtl));
+        kill_undefined_bargain(dkjtl);
+        localStorage.setItem("dkjtl",JSON.stringify(dkjtl));
+
+        kill_undefined_bargain(gwwyldzb);
+        localStorage.setItem("gwwyldzb",JSON.stringify(gwwyldzb));
+        kill_undefined_bargain(dkwyldzb);
+        localStorage.setItem("dkwyldzb",JSON.stringify(dkwyldzb));
+        kill_undefined_bargain(gwdyzb);
+        localStorage.setItem("gwdyzb",JSON.stringify(gwdyzb));
+        kill_undefined_bargain(dkdyzb);
+        localStorage.setItem("dkdyzb",JSON.stringify(dkdyzb));
+
+        kill_undefined_bargain(dhcbarr);
+        localStorage.setItem("dhcbarr",JSON.stringify(dhcbarr));*/
+    }
+
+    function prime_data(json_data_last) {
+        var cjcbarr=[],cjzhlarr=[],
+            gwzyjarr=[],gwzdsarr=[],
+            gwyfjjrarr=[],
+            rjzxfysarr=[],rjyfjjrs=[];
+        for(var i = 0 ; i< json_data_last.length/13; i++){
+            var r =json_data_last;
+            cjcbarr.push([
+                Number(r[i*13].成交成本),
+                Number(r[i*13+1].成交成本),
+                Number(r[i*13+2].成交成本),
+                Number(r[i*13+3].成交成本),
+                Number(r[i*13+4].成交成本),
+                Number(r[i*13+5].成交成本),
+                Number(r[i*13+6].成交成本),
+                Number(r[i*13+7].成交成本),
+                Number(r[i*13+8].成交成本),
+                Number(r[i*13+9].成交成本),
+                Number(r[i*13+10].成交成本),
+                Number(r[i*13+11].成交成本),
+                Number(r[i*13+12].成交成本)
+            ]);
+            cjzhlarr.push([
+                r[i*13].成交转化率,
+                r[i*13+1].成交转化率,
+                r[i*13+2].成交转化率,
+                r[i*13+3].成交转化率,
+                r[i*13+4].成交转化率,
+                r[i*13+5].成交转化率,
+                r[i*13+6].成交转化率,
+                r[i*13+7].成交转化率,
+                r[i*13+8].成交转化率,
+                r[i*13+9].成交转化率,
+                r[i*13+10].成交转化率,
+                r[i*13+11].成交转化率,
+                r[i*13+12].成交转化率
+            ]);
+
+            gwzyjarr.push([
+                r[i*13].官网总业绩,
+                r[i*13+1].官网总业绩,
+                r[i*13+2].官网总业绩,
+                r[i*13+3].官网总业绩,
+                r[i*13+4].官网总业绩,
+                r[i*13+5].官网总业绩,
+                r[i*13+6].官网总业绩,
+                r[i*13+7].官网总业绩,
+                r[i*13+8].官网总业绩,
+                r[i*13+9].官网总业绩,
+                r[i*13+10].官网总业绩,
+                r[i*13+11].官网总业绩,
+                r[i*13+12].官网总业绩
+            ]);
+            gwzdsarr.push([
+                r[i*13].官网总单数,
+                r[i*13+1].官网总单数,
+                r[i*13+2].官网总单数,
+                r[i*13+3].官网总单数,
+                r[i*13+4].官网总单数,
+                r[i*13+5].官网总单数,
+                r[i*13+6].官网总单数,
+                r[i*13+7].官网总单数,
+                r[i*13+8].官网总单数,
+                r[i*13+9].官网总单数,
+                r[i*13+10].官网总单数,
+                r[i*13+11].官网总单数,
+                r[i*13+12].官网总单数
+            ]);
+
+            gwyfjjrarr.push([
+                r[i*13].发盘人数占比,
+                r[i*13+1].发盘人数占比,
+                r[i*13+2].发盘人数占比,
+                r[i*13+3].发盘人数占比,
+                r[i*13+4].发盘人数占比,
+                r[i*13+5].发盘人数占比,
+                r[i*13+6].发盘人数占比,
+                r[i*13+7].发盘人数占比,
+                r[i*13+8].发盘人数占比,
+                r[i*13+9].发盘人数占比,
+                r[i*13+10].发盘人数占比,
+                r[i*13+11].发盘人数占比,
+                r[i*13+12].发盘人数占比
+            ]);
+
+            rjzxfysarr.push([
+                r[i*13].日均在线房源数,
+                r[i*13+1].日均在线房源数,
+                r[i*13+2].日均在线房源数,
+                r[i*13+3].日均在线房源数,
+                r[i*13+4].日均在线房源数,
+                r[i*13+5].日均在线房源数,
+                r[i*13+6].日均在线房源数,
+                r[i*13+7].日均在线房源数,
+                r[i*13+8].日均在线房源数,
+                r[i*13+9].日均在线房源数,
+                r[i*13+10].日均在线房源数,
+                r[i*13+11].日均在线房源数,
+                r[i*13+12].日均在线房源数
+            ]);
+            rjyfjjrs.push([
+                r[i*13].日均发盘人数,
+                r[i*13+1].日均发盘人数,
+                r[i*13+2].日均发盘人数,
+                r[i*13+3].日均发盘人数,
+                r[i*13+4].日均发盘人数,
+                r[i*13+5].日均发盘人数,
+                r[i*13+6].日均发盘人数,
+                r[i*13+7].日均发盘人数,
+                r[i*13+8].日均发盘人数,
+                r[i*13+9].日均发盘人数,
+                r[i*13+10].日均发盘人数,
+                r[i*13+11].日均发盘人数,
+                r[i*13+12].日均发盘人数
+            ]);
+
+
+        }
+
+         localStorage.setItem("cjcbarr",JSON.stringify(cjcbarr));
+         kill_undefined_bargain(cjzhlarr);
+         localStorage.setItem("cjzhlarr",JSON.stringify(cjzhlarr));
+
+        kill_undefined_bargain(gwzyjarr);
+        localStorage.setItem("gwzyjarr",JSON.stringify(gwzyjarr));
+        kill_undefined_bargain(gwzdsarr);
+        localStorage.setItem("gwzdsarr",JSON.stringify(gwzdsarr));
+
+        kill_undefined_bargain(gwyfjjrarr);
+        localStorage.setItem("gwyfjjrarr",JSON.stringify(gwyfjjrarr));
+
+        kill_undefined_bargain(rjzxfysarr);
+        localStorage.setItem("rjzxfysarr",JSON.stringify(rjzxfysarr));
+        kill_undefined_bargain(rjyfjjrs);
+        localStorage.setItem("rjyfjjrs",JSON.stringify(rjyfjjrs));
+    }
+
+
+    //获取去重后json时间
+    function time_removeRepeat(arr) {
+        var newa=[];
+        for(var i = 0 ; i< arr.length; i++){
+            if(newa.indexOf(arr[i].月份)<0){
+                newa.push(arr[i].月份);
+            }
+        }
+        return newa.sort();
+    }
+    function kill_undefined(arr){
+        for(var i=0;i<arr.length;i++){
+            for(var k=0;k<arr[i].length;k++){
+                if (arr[i][k]) {
+                    var numstr=arr[i][k].substr(1,arr[i][k].length).replace(',', '');
+                    var num=Number(numstr);
+                    arr[i][k]=num;
+                }else{
+                    arr[i][k]=null;
+                };
+            }
+        }
+        return arr;
+
+    }
+    function kill_undefined_bargain(arr) {
+        for(var i=0;i<arr.length;i++){
+            for(var k=0;k<arr[i].length;k++){
+                if (arr[i][k]) {
+                    var numstr=arr[i][k].replace('%', '').replace(',', '');
+                    var num=Number(numstr);
+                    arr[i][k]=num;
+                }else{
+                    arr[i][k]=null;
+                };
+            }
+        }
+        return arr;
+
+    }
+
+</script>
